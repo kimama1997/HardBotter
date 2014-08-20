@@ -1,5 +1,9 @@
 <?php
 
+error_reporting(-1);
+
+
+require __DIR__ . '/config.php';
 require __DIR__ . '/TwistOAuth.php';
 require __DIR__ . '/HardBotterModel.php';
 
@@ -9,27 +13,22 @@ require __DIR__ . '/HardBotterModel.php';
  * で指示されている通りに必ず実装してください。
  */
 class MyHardBotter extends HardBotterModel {
-    
+
     /**
      * HardBotterModel.php 内で指示されている通りに必ず実装してください。
      */
     protected function getTwistOAuth() {
         // TwistOAuthオブジェクトを返します
-        return new TwistOAuth(
-            '***********************',
-            '***********************',
-            '***********************',
-            '"**********************'
-        );
+        return new TwistOAuth(CK,CS,AT,ATS);
     }
-    
+
     /**
      * HardBotterModel.php 内で指示されている通りに必ず実装してください。
      */
     protected function action() {
         $this->checkMentions();
     }
-    
+
     /**
      * メンションをチェックし、反応できるものがあればリプライで反応します。
      */
@@ -47,12 +46,22 @@ class MyHardBotter extends HardBotterModel {
                         '大吉',
                         '吉', '吉',
                         '中吉', '中吉', '中吉',
-                        '小吉', '小吉', '小吉', 
+                        '小吉', '小吉', '小吉',
                         '末吉', '末吉',
                         '凶',
                     );
                     return $list[array_rand($list)];
                 },
+                '/(update_name)\s?(.{1,20})/u' => function ($s,$m)
+                {
+                  $new_name = $m{2};
+                  $res = $this->getTwistOAuth()->post('account/update_profile',array ( "name" => $new_name ));
+                  return "Changed my name into {$res->name} by {$s->user->screen_name}";
+                },
+                '/(.{1,20})(\s)?\(\@.{1,15}\)/u' => function ($s,$m)
+                {
+                  return $m[1]."にしたりしません";
+                }
             ));
             // 結果が得られればそれを反応済みリストに追加してリプライを実行する
             if ($text !== null) {
@@ -61,8 +70,8 @@ class MyHardBotter extends HardBotterModel {
             }
         }
     }
-    
+
 }
 
-// 実行します 
+// 実行します
 MyHardBotter::run('MyHardBotterLog.dat');
